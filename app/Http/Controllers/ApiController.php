@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use http\Env\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -18,12 +19,14 @@ class ApiController extends Controller
             'email' => 'required|email',
             'password' => 'required',
         ]);
-        
+
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
             $user = Auth::user();
             $user->setRememberToken(Str::random(60));
+            $user->save();
             return response([
-                "token" =>$user->getRememberToken()
+                "token" => $user->getRememberToken(),
+                "uid" => $user->getAuthIdentifier()
             ]);
 
         }
@@ -33,7 +36,6 @@ class ApiController extends Controller
 
     public function register(Request $request)
     {
-
         $user = User::firstOrCreate(
             [
                 'email' => $request->email,
@@ -42,8 +44,6 @@ class ApiController extends Controller
             [
                 'password' => Hash::make($request->password)
             ]);
-
         return response($user);
-
     }
 }
